@@ -1,6 +1,8 @@
 import { program } from 'commander';
 import fs from 'fs/promises';
 import http from 'http';
+import path from 'node:path';
+import superagent from 'superagent';
 
 // Налаштування параметрів командного рядка
 program
@@ -37,8 +39,52 @@ async function startServer() {
         // Обробка запитів на основі методу
         switch (method) {
           case 'GET':
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end(`Логіка GET для коду ${statusCode}`);
+            // Формування шляху до файлу в теці кешу
+            const filePath = path.join(options.cache, `${statusCode}.jpg`);
+
+            try {
+              const image = await fs.readFile(filePath);
+              
+              // Якщо помилки немає, клієнт отримує файл з кодом 200
+              res.writeHead(200, {
+                'Content-Type': 'image/jpeg',
+                'Cache-Source': 'Cache'
+              });
+              res.end(image);
+              console.log(`[GET] ${statusCode} - Віддано з кешу`);
+
+            } catch (err) {
+              // Якщо файл не знайдено в кеші, завантажуємо його з http.cat
+              try {
+                console.log(`[GET] ${statusCode} - Немає в кеші, завантажуємо з http.cat...`);
+                
+                // Запит через superagent
+                const catResponse = await superagent.get(`https://http.cat/${statusCode}`);
+                const imageBuffer = catResponse.body;
+
+                // Зберігання отриманих двійкових даних в кеш
+                await fs.writeFile(filePath, imageBuffer);
+
+                // Віддаємо клієнту
+                res.writeHead(200, {
+                  'Content-Type': 'image/jpeg',
+                  'Cache-Source': 'http.cat'
+                });
+                res.end(imageBuffer);
+                console.log(`[GET] ${statusCode} - Успішно збережено в кеш та віддано`);
+
+              } catch (superagentErr) {
+                // Обробка помилок superagent
+                if (superagentErr.status === 404) {
+                  res.writeHead(404, { 'Content-Type': 'text/plain' });
+                  res.end('Not Found: Картинки для такого коду не існує');
+                } else {
+                  res.writeHead(500, { 'Content-Type': 'text/plain' });
+                  res.end('Internal Server Error: Помилка при зверненні до http.cat');
+                }
+                console.error(`[GET] Помилка завантаження ${statusCode}:`, superagentErr.message);
+              }
+            }
             break;
             
           case 'PUT':
