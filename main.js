@@ -14,6 +14,19 @@ program
 program.parse(process.argv);
 const options = program.opts();
 
+// Допоміжна функція для отримання тіла запиту
+async function getBody(req) {
+  const chunks = [];
+  
+  // Цикл чекає кожен наступний шматочок даних із потоку
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+  
+  // Коли потік завершується, цикл закінчується і буфер склеюється в один
+  return Buffer.concat(chunks);
+}
+
 // Основна асинхронна функція ініціалізації
 async function startServer() {
   try {
@@ -88,8 +101,24 @@ async function startServer() {
             break;
             
           case 'PUT':
-            res.writeHead(201, { 'Content-Type': 'text/plain' });
-            res.end(`Логіка PUT для коду ${statusCode}`);
+            const putFilePath = path.join(options.cache, `${statusCode}.jpg`);
+            
+            try {
+              // Запис потоку даних у буфер
+              const bodyBuffer = await getBody(req);
+              
+              // Запис зібраної картинки в кеш
+              await fs.writeFile(putFilePath, bodyBuffer);
+
+              // Відрпавлення відповіді клієнту
+              res.writeHead(201, { 'Content-Type': 'text/plain' });
+              res.end('Created');
+              console.log(`[PUT] ${statusCode} - Картинку збережено в кеш`);
+            } catch (putError) {
+              console.error(`[PUT] Помилка збереження ${statusCode}:`, putError);
+              res.writeHead(500, { 'Content-Type': 'text/plain' });
+              res.end('Internal Server Error');
+            }
             break;
             
           case 'DELETE':
