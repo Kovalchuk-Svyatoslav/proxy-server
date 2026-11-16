@@ -122,8 +122,28 @@ async function startServer() {
             break;
             
           case 'DELETE':
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end(`Логіка DELETE для коду ${statusCode}`);
+            const deleteFilePath = path.join(options.cache, `${statusCode}.jpg`);
+            
+            try {
+              // Спроба асинхронного видалення файлу із кешу
+              await fs.unlink(deleteFilePath);
+              
+              // Якщо помилки немає — файл успішно видалено
+              res.writeHead(200, { 'Content-Type': 'text/plain' });
+              res.end('OK: File deleted');
+              console.log(`[DELETE] ${statusCode} - Картинку успішно видалено з кешу`);
+              
+            } catch (deleteErr) {
+              if (deleteErr.code === 'ENOENT') {
+                res.writeHead(404, { 'Content-Type': 'text/plain' });
+                res.end('Not Found: Картинки немає в кеші');
+                console.log(`[DELETE] ${statusCode} - Спроба видалити неіснуючий файл`);
+              } else {
+                console.error(`[DELETE] Помилка видалення ${statusCode}:`, deleteErr);
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Internal Server Error');
+              }
+            }
             break;
             
           default:
