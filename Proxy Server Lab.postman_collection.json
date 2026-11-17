@@ -1,0 +1,247 @@
+{
+  "info": {
+    "_postman_id": "9171a5fa-fc8d-42e6-9cda-7ba13bed614b",
+    "name": "Proxy Server Lab",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "60239046",
+    "_collection_link": "https://go.postman.co/collection/60239046-9171a5fa-fc8d-42e6-9cda-7ba13bed614b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "GET картинки, якої немає в кеші",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Content-Type is image/jpeg\", function () {\r\n    pm.response.to.have.header(\"Content-Type\", \"image/jpeg\");\r\n});\r\npm.test(\"Source is http.cat\", function () {\r\n    pm.response.to.have.header(\"Cache-Source\", \"http.cat\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/404",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "404"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Повторний GET тієї самої картинки",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Source is http.cat\", function () {\r\n    pm.response.to.have.header(\"Cache-Source\", \"Cache\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/404",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "404"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT власної картинки",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201 Created\", function () {\r\n    pm.response.to.have.status(201);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "file",
+          "file": {
+            "src": "/C:/Users/Admin/Pictures/my_custom_cat.jpg"
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/201",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "201"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET після PUT",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\npm.test(\"Content-Type is image/jpeg\", function () {\r\n    pm.response.to.have.header(\"Content-Type\", \"image/jpeg\");\r\n});\r\npm.test(\"Source is Cache (not http.cat)\", function () {\r\n    pm.response.to.have.header(\"Cache-Source\", \"Cache\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/201",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "201"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/201",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "201"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE картинки, якої немає",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/201",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "201"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET неіснуючого коду",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/999",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "999"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Запит із недозволеним методом",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 405 Method Not Allowed\", function () {\r\n    pm.response.to.have.status(405);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/404",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "404"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    }
+  ]
+}
